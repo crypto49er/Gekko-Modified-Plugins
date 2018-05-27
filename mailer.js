@@ -4,6 +4,9 @@ var log = require('../core/log.js');
 var util = require('../core/util.js');
 var config = util.getConfig();
 var mailConfig = config.mailer;
+var buyPrice = 0.0;
+var profitLoss = 0.0;
+var profitPercentage = 0.0;
 
 var Mailer = function(done) {
   _.bindAll(this);
@@ -103,6 +106,7 @@ Mailer.prototype.processAdvice = function(advice) {
 
   if (advice.recommendation == "soft" && mailConfig.muteSoft) return;
 
+  if (advice.recommendation == "long") {
   var text = [
     'Gekko is watching ',
     config.watch.exchange,
@@ -115,6 +119,41 @@ Mailer.prototype.processAdvice = function(advice) {
     ' ',
     this.price
   ].join('');
+
+  buyPrice = this.price;
+  }
+
+  if (advice.recommendation == "short") {
+
+    profitLoss = this.price - buyPrice;
+    profitPercentage = ((this.price / buyPrice) - 1) * 100;
+    profitLoss = profitLoss.toFixed(2);
+    profitPercentage = profitPercentage.toFixed(2);
+
+    var text = [
+      'Gekko is watching ',
+      config.watch.exchange,
+      '/',
+      config.watch.currency,
+      '/',
+      config.watch.asset,
+      ' and has detected a new trend, advice is to go ',
+      advice.recommendation,
+      '.\n\nPreviously, Gekko issued a buy signal at ',
+      buyPrice,
+      ' and the current price is ',
+      this.price,
+      '.\n\nThe trade resulted in a profit (or loss) of ',
+      profitLoss,
+      ', a gain or loss of ',
+      profitPercentage,
+      ' percent. '
+    ].join('');
+  
+    buyPrice = 0;
+    profitLoss = 0;
+    profitPercentage = 0;
+    }
 
   var subject = 'New advice: go ' + advice.recommendation;
 
