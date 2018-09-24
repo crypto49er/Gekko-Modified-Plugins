@@ -86,14 +86,13 @@ Mailer.prototype.setup = function(done) {
 };
 
 Mailer.prototype.mail = function(subject, content, done) {
-  util.retry(function(cb) {
-    this.server.send({
-      text: content,
-      from: mailConfig.from,
-      to: mailConfig.to,
-      subject: mailConfig.tag + subject
-    }, cb);
-  }.bind(this), done || this.checkResults);
+  
+  this.server.send({
+    text: content,
+    from: mailConfig.from,
+    to: mailConfig.to,
+    subject: mailConfig.tag + subject
+  }, done || this.checkResults);
 };
 
 Mailer.prototype.processCandle = function(candle, done) {
@@ -159,6 +158,16 @@ Mailer.prototype.processAdvice = function(advice) {
 
   this.mail(subject, text);
 };
+
+Mailer.prototype.processStratNotification = function({ content }) {
+  const subject = `New notification from ${config.tradingAdvisor.method}`;
+  const text = [
+    'Gekko received new notification :\n\n',
+    content
+  ].join('');
+
+  this.mail(subject, text);
+}
 
 Mailer.prototype.checkResults = function(err) {
   if(err)
